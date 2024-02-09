@@ -47,7 +47,7 @@ class Client
           puts "Server disconnected."
           break
         else
-          puts "Received from server: #{received_data}"
+          #puts "Received from server: #{received_data}"
           @received_data = JSON.parse(received_data, symbolize_names: true)
         end
       end
