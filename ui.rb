@@ -32,10 +32,10 @@ class GameWindow < Gosu::Window
 
     # Update the players' positions based on received data
     # This field will be the post-Marshal'd data
-    # puts "\n<<<<<"
+    puts "\n<<<<<"
     received_data = @client.received_data
-    # puts received_data
-    # puts ">>>>>>"
+    puts received_data
+    puts ">>>>>>"
 
     update_local_map(received_data[:data]) if received_data&.key?(:type) && received_data[:type] == "big"
     # update_player_info(received_data) if received_data&.key?(:player_id)
@@ -105,13 +105,16 @@ class GameWindow < Gosu::Window
       end
     end
 
+    @local_overworld_map.each do |ow_id, data|
+      if !overworld_data_map.key?(ow_id)
+        @local_overworld_map.delete(ow_id)
+      end
+    end
+
     if !overworld_data_map.empty?
       overworld_data_map.each do |ow_id, data|
         @local_overworld_map[ow_id] ||= {}
         @local_overworld_map[ow_id] = data
-        if data[:status] == "dead"
-          @local_overworld_map.delete(ow_id)
-        end
       end
     end
     #puts @local_players_map
@@ -141,12 +144,13 @@ class GameWindow < Gosu::Window
   def check_collisions
     @local_overworld_map.each do |_id, ow_data|
       if !ow_data[:x].nil? && !ow_data[:y].nil?
-        puts "collision check on #{_id}"
+       # puts "collision check on #{_id}"
         if collision?(@x, @y, 50, 50, ow_data[:x], ow_data[:y], 50, 50)
           # kill globally
           #@client.send_data(kill_entity: true, entity_id: _id)
           @client.send_data(type: "overworld_kill", overworld_id: _id)
-          puts "clientside"
+          
+         # puts "clientside"
           #puts @overworld_entities
         end
       end
