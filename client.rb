@@ -5,6 +5,7 @@ require 'json'
 
 class Client
   attr_reader :received_data
+  attr_reader :local_client_id
 
   def initialize(server_address, server_port)
     @server_address = server_address
@@ -22,25 +23,23 @@ class Client
 
   def send_data(data)
     return unless @socket
-
-    # Convert the hash to a JSON-formatted string
-    json_data = data.to_json
-
-    # Send the JSON data to the server
-    @socket.puts(json_data)
-    #puts "Sent JSON data to the server: #{json_data}"
+    @socket.puts(Marshal.dump(data))
   end
 
   def close
     @socket&.close
   end
 
-  private
+  def assign_local_client_id(client_id)
+    @local_client_id = client_id
+  end
 
-  def start_listener_thread
+  # Change this thread to interpret byte streams from Marshal
+  private def start_listener_thread
     Thread.new do
       loop do
-        received_data = @socket.gets&.chomp
+        received_data = @socket.recv(4096)
+        #puts received_data
 
         if received_data.nil?
           # Server closed the connection
@@ -48,7 +47,7 @@ class Client
           break
         else
           #puts "Received from server: #{received_data}"
-          @received_data = JSON.parse(received_data, symbolize_names: true)
+          @received_data = Marshal.load(received_data)
         end
       end
     end

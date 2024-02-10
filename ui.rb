@@ -8,10 +8,12 @@ class GameWindow < Gosu::Window
 
     @x = @y = 20
     @client = client
-    @player_id = rand(44444444)
-    @players = {}
+    @local_player_id = rand(44444444)
+    @local_players_map = {}
     @overworld_entities = {}
     @color = random_gosu_color
+
+    puts @local_player_id
 
     @font = Gosu::Font.new(self, Gosu::default_font_name, 20)
   end
@@ -26,13 +28,18 @@ class GameWindow < Gosu::Window
 
     check_collisions()
 
-    # Send coordinates and player ID to the server using the client instance
-    @client.send_data(player_id: @player_id, x: @x, y: @y, color: color_to_hash(@color))
+    @client.send_data(type: "player_data", data: {player_id: @local_player_id, x: @x, y: @y, color: color_to_hash(@color)})
 
     # Update the players' positions based on received data
+    # This field will be the post-Marshal'd data
+    puts "\n<<<<<"
     received_data = @client.received_data
-    update_player_info(received_data) if received_data&.key?(:player_id)
-    update_entity_info(received_data) if received_data&.key?(:entity_id)
+    puts received_data
+    puts ">>>>>>"
+
+    update_local_player_map(received_data) if received_data&.key?(:type) && received_data[:type] == "player_data"
+    # update_player_info(received_data) if received_data&.key?(:player_id)
+    # update_entity_info(received_data) if received_data&.key?(:entity_id)
   end
 
   def draw
@@ -40,60 +47,52 @@ class GameWindow < Gosu::Window
     draw_quad(0, 0, Gosu::Color.new(255, 182, 193), width, 0, Gosu::Color.new(255, 182, 193), 0, height, Gosu::Color.new(255, 182, 193), width, height, Gosu::Color.new(255, 182, 193))
 
     # Draw squares for all players
-    @players.each do |_id, player_info|
-      x, y, color = player_info[:x], player_info[:y], hash_to_color(player_info[:color])
-      Gosu.draw_rect(x, y, 50, 50, color)
-      @font.draw_text(player_info[:player_id].to_s, x - 6, y - 16, 1, 0.8, 0.8, Gosu::Color::WHITE)
+    @local_players_map.each do |player_id, player_data|
+      if !player_data.empty?
+        puts player_data
+        x, y, color = player_data[:x], player_data[:y], hash_to_color(player_data[:color])
+        Gosu.draw_rect(x, y, 50, 50, color)
+        @font.draw_text(player_data[:player_id].to_s, x - 6, y - 16, 1, 0.8, 0.8, Gosu::Color::WHITE)
+      end
       #Gosu.draw_text(player_info[:player_id].to_s, x + 25, y + 25, 1, 1, 10, Gosu::Color::BLACK, Gosu.default_font_name)
     end
 
-    # Draw squares for overworld entities
-    @overworld_entities.each do |_id, entity_info|
-      if !entity_info[:color].nil?
-        puts entity_info
-        x, y, color = entity_info[:x], entity_info[:y], hash_to_color(entity_info[:color])
-        Gosu.draw_rect(x, y, 50, 50, color)
-        @font.draw_text(entity_info[:entity_id].to_s, x - 6, y - 16, 1, 0.8, 0.8, Gosu::Color::WHITE)
-      end
-    end
+    # # Draw squares for overworld entities
+    # @overworld_entities.each do |_id, entity_info|
+    #   if !entity_info[:color].nil?
+    #     puts entity_info
+    #     x, y, color = entity_info[:x], entity_info[:y], hash_to_color(entity_info[:color])
+    #     Gosu.draw_rect(x, y, 50, 50, color)
+    #     @font.draw_text(entity_info[:entity_id].to_s, x - 6, y - 16, 1, 0.8, 0.8, Gosu::Color::WHITE)
+    #   end
+    # end
 
     # Draw square for client player
     Gosu.draw_rect(@x, @y, 50, 50, @color)
-    @font.draw_text(@player_id.to_s, @x-6, @y-16, 1, 0.8, 0.8, Gosu::Color::WHITE)
+    @font.draw_text(@local_player_id.to_s, @x-6, @y-16, 1, 0.8, 0.8, Gosu::Color::WHITE)
   end
 
-  private def move_left
-    @x -= 5
-  end
+  def update_local_player_map(received_data)
 
-  private def move_right
-    @x += 5
-  end
+    puts "in local update"
+    puts received_data
+    received_data_map = received_data[:data]
+    puts "here!"
+    received_data_map.each do |player_id, data|
+      next if @local_player_id == data[:player_id]
+      @local_players_map[player_id] ||= {}
+      @local_players_map[player_id] = data
 
-  private def move_up
-    @y -= 5
-  end
-
-  private def move_down
-    @y += 5
-  end
-
-  def update_player_info(received_data)
-    player_id = received_data[:player_id]
+      # prev_x = @local_players_map[player_id][:x] || data[:x]
+      # prev_y = @local_players_map[player_id][:y] || data[:y]
   
-    if player_id
-      # Update information for a specific player
-      @players[player_id] ||= {}
-
-      @players[player_id][:player_id] = player_id
-  
-      prev_x = @players[player_id][:x] || received_data[:x]
-      prev_y = @players[player_id][:y] || received_data[:y]
-  
-      @players[player_id][:x] = lerp(prev_x, received_data[:x], 0.5)
-      @players[player_id][:y] = lerp(prev_y, received_data[:y], 0.5)
-      @players[player_id][:color] = received_data[:color]
+      # @local_players_map[player_id][:x] = lerp(prev_x, data[:x], 0.5)
+      # @local_players_map[player_id][:y] = lerp(prev_y, data[:y], 0.5)
+      # @local_players_map[player_id][:color] = received_data[:color]
     end
+
+    puts @local_players_map
+    puts "there\n\n\n"
   end
 
   def update_entity_info(received_data)
@@ -158,6 +157,22 @@ class GameWindow < Gosu::Window
 
   def collision?(x1, y1, w1, h1, x2, y2, w2, h2)
     x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2
+  end
+
+  private def move_left
+    @x -= 5
+  end
+
+  private def move_right
+    @x += 5
+  end
+
+  private def move_up
+    @y -= 5
+  end
+
+  private def move_down
+    @y += 5
   end
 end
 
