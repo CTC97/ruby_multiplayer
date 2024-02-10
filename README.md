@@ -10,6 +10,4 @@ Gosu UI that allows player to control movement. Each instance of the UI creates 
 <img src="other/screenshot_2-9.png" alt="screenshot" width="600"/>
 
 ### To Do:
-- Change data communication from JSON to binary using the Marshal library
-- Consider how to send batch data vs individual data messages
-- Pull squares into their own class
+- Pull squares into their own class (to be abstracted as a placeholder for players, entities, overworld items, etc.)
