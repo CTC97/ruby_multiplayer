@@ -38,7 +38,7 @@ class Client
   private def start_listener_thread
     Thread.new do
       loop do
-        received_data = @socket.recv(4096)
+        received_data = @socket.recv(8192)
         #puts received_data
 
         if received_data.nil?

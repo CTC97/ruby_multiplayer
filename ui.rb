@@ -10,7 +10,7 @@ class GameWindow < Gosu::Window
     @client = client
     @local_player_id = rand(44444444)
     @local_players_map = {}
-    @overworld_entities = {}
+    @local_overworld_map = {}
     @color = random_gosu_color
 
     puts @local_player_id
@@ -26,18 +26,18 @@ class GameWindow < Gosu::Window
 
     @client.close if Gosu.button_down?(Gosu::KB_ESCAPE)
 
-    check_collisions()
+    #check_collisions()
 
     @client.send_data(type: "player_data", data: {player_id: @local_player_id, x: @x, y: @y, color: color_to_hash(@color)})
 
     # Update the players' positions based on received data
     # This field will be the post-Marshal'd data
-    puts "\n<<<<<"
+    # puts "\n<<<<<"
     received_data = @client.received_data
-    puts received_data
-    puts ">>>>>>"
+    # puts received_data
+    # puts ">>>>>>"
 
-    update_local_player_map(received_data) if received_data&.key?(:type) && received_data[:type] == "player_data"
+    update_local_map(received_data[:data]) if received_data&.key?(:type) && received_data[:type] == "big"
     # update_player_info(received_data) if received_data&.key?(:player_id)
     # update_entity_info(received_data) if received_data&.key?(:entity_id)
   end
@@ -49,12 +49,21 @@ class GameWindow < Gosu::Window
     # Draw squares for all players
     @local_players_map.each do |player_id, player_data|
       if !player_data.empty?
-        puts player_data
+        #puts player_data
         x, y, color = player_data[:x], player_data[:y], hash_to_color(player_data[:color])
         Gosu.draw_rect(x, y, 50, 50, color)
         @font.draw_text(player_data[:player_id].to_s, x - 6, y - 16, 1, 0.8, 0.8, Gosu::Color::WHITE)
       end
       #Gosu.draw_text(player_info[:player_id].to_s, x + 25, y + 25, 1, 1, 10, Gosu::Color::BLACK, Gosu.default_font_name)
+    end
+
+    @local_overworld_map.each do |ow_id, ow_data|
+      if !ow_data.empty?
+        #puts ow_data
+        x, y, color = ow_data[:x], ow_data[:y], hash_to_color(ow_data[:color])
+        Gosu.draw_rect(x, y, 50, 50, color)
+        @font.draw_text(ow_data[:entity_id].to_s, x - 6, y - 16, 1, 0.8, 0.8, Gosu::Color::WHITE)
+      end
     end
 
     # # Draw squares for overworld entities
@@ -72,54 +81,42 @@ class GameWindow < Gosu::Window
     @font.draw_text(@local_player_id.to_s, @x-6, @y-16, 1, 0.8, 0.8, Gosu::Color::WHITE)
   end
 
-  def update_local_player_map(received_data)
 
-    puts "in local update"
-    puts received_data
-    received_data_map = received_data[:data]
-    puts "here!"
-    received_data_map.each do |player_id, data|
-      next if @local_player_id == data[:player_id]
-      @local_players_map[player_id] ||= {}
-      @local_players_map[player_id] = data
+  def update_local_map(received_data)
+    check_collisions()
 
-      # prev_x = @local_players_map[player_id][:x] || data[:x]
-      # prev_y = @local_players_map[player_id][:y] || data[:y]
-  
-      # @local_players_map[player_id][:x] = lerp(prev_x, data[:x], 0.5)
-      # @local_players_map[player_id][:y] = lerp(prev_y, data[:y], 0.5)
-      # @local_players_map[player_id][:color] = received_data[:color]
-    end
+    #puts "in local update"
+    #puts received_data
+    player_data_map = received_data[:player_data]
+    overworld_data_map = received_data[:overworld_data]
+    #puts "here!"
+    if !player_data_map.empty?
+      player_data_map.each do |player_id, data|
+        next if @local_player_id == data[:player_id]
+        @local_players_map[player_id] ||= {}
+        @local_players_map[player_id] = data
 
-    puts @local_players_map
-    puts "there\n\n\n"
-  end
-
-  def update_entity_info(received_data)
-    entity_id = received_data[:entity_id]
-  
-    if entity_id
-      puts "Updating entity info for entity_id: #{entity_id}"
-      #puts "Received data: #{received_data}"
-  
-      @overworld_entities[entity_id] ||= {}
-      @overworld_entities[entity_id][:entity_id] = entity_id
-      @overworld_entities[entity_id][:status] = received_data[:status]
-  
-      if @overworld_entities[entity_id][:status] == "dead"
-        puts "Entity is dead. Removing entity_id: #{entity_id}"
-        @overworld_entities.delete(entity_id)
-        puts @overworld_entities
-      else 
-        @overworld_entities[entity_id][:x] = received_data[:x]
-        @overworld_entities[entity_id][:y] = received_data[:y]
-        @overworld_entities[entity_id][:color] = received_data[:color]
+        # prev_x = @local_players_map[player_id][:x] || data[:x]
+        # prev_y = @local_players_map[player_id][:y] || data[:y]
+    
+        # @local_players_map[player_id][:x] = lerp(prev_x, data[:x], 0.5)
+        # @local_players_map[player_id][:y] = lerp(prev_y, data[:y], 0.5)
+        # @local_players_map[player_id][:color] = received_data[:color]
       end
-  
-      #puts "Updated overworld_entities: #{@overworld_entities}"
     end
-  end
 
+    if !overworld_data_map.empty?
+      overworld_data_map.each do |ow_id, data|
+        @local_overworld_map[ow_id] ||= {}
+        @local_overworld_map[ow_id] = data
+        if data[:status] == "dead"
+          @local_overworld_map.delete(ow_id)
+        end
+      end
+    end
+    #puts @local_players_map
+    #puts "there\n\n\n"
+  end
 
   def lerp(start, target, alpha)
     start + alpha * (target - start)
@@ -142,14 +139,15 @@ class GameWindow < Gosu::Window
   end
 
   def check_collisions
-    @overworld_entities.each do |_id, entity_data|
-      if !entity_data[:x].nil? && !entity_data[:y].nil?
+    @local_overworld_map.each do |_id, ow_data|
+      if !ow_data[:x].nil? && !ow_data[:y].nil?
         puts "collision check on #{_id}"
-        if collision?(@x, @y, 50, 50, entity_data[:x], entity_data[:y], 50, 50)
+        if collision?(@x, @y, 50, 50, ow_data[:x], ow_data[:y], 50, 50)
           # kill globally
-          @client.send_data(kill_entity: true, entity_id: _id)
+          #@client.send_data(kill_entity: true, entity_id: _id)
+          @client.send_data(type: "overworld_kill", overworld_id: _id)
           puts "clientside"
-          puts @overworld_entities
+          #puts @overworld_entities
         end
       end
     end
