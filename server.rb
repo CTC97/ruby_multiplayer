@@ -88,16 +88,17 @@ class Server
         if data_type == "player_data"
           data_body = marshld_data[:data]
           handle_player_data(data_body, client)
-        elsif data_type == "overworld_kill"
+        elsif data_type == "overworld_kill" && @overworld_map.key?(marshld_data[:overworld_id])
           puts "overworld kill <<<<"
           puts @overworld_map
-          #puts @overworld_map[10]
+          puts marshld_data[:overworld_id]
+          puts @overworld_map[marshld_data[:overworld_id]]
           puts ">>>>"
           @overworld_map[marshld_data[:overworld_id]][:status] = "dead"
         end
   
         big_data = {player_data: @client_player_map, overworld_data: @overworld_map}
-        puts @client_player_map
+        puts @overworld_map
         send_data_to_client(big_data)
 
       rescue Errno::ECONNRESET
@@ -117,11 +118,14 @@ class Server
       begin
         puts "sending to #{receiver}"
         receiver.puts(Marshal.dump(type: "big", data: map))
+        receiver.flush()
       rescue Errno::EPIPE
         puts "Error: Broken pipe. Client disconnected."
-        @clients.delete(client)
+        @clients.delete(receiver)
       end
     end
+
+    clean_overworld()
   end
 
   def handle_player_data(data_body, client)
