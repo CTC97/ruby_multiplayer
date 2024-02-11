@@ -1,0 +1,17 @@
+* ~args.easing~ [[GTK::Runtime.docs_api_summary_easing]]
+** ~args.easing.ease start_tick, current_tick, duration, easing_functions~
+** ~args.easing.ease_spline start_tick, current_tick, duration, spline~
+* ~args.string~ [[GTK::Runtime.docs_api_summary_easing]]
+** ~args.string.wrapped_lines string, max_character_length~
+* ~args.easing~ [[GTK::Args.docs_easing]]
+** Example
+** Easing Definitions
+*** ~:identity~
+*** ~:flip~
+*** ~:quad~, ~:cube~, ~:quart~, ~:quint~
+**** Example
+*** Combining Easing Definitions
+**** Example
+*** Custom Easing Functions
+**** Example - Using Lambdas
+**** Example - Extending Easing Definitions
