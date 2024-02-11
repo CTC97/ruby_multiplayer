@@ -1,4 +1,4 @@
-## <img src="other/ruby.ico" alt="screenshot" width="16"/> Ruby Multiplayer Engine <img src="other/ruby.ico" alt="screenshot" width="16"/>
+## <img src="other/ruby.ico" alt="screenshot" width="16"/> Ruby Multiplayer Engine <img src="other/ruby.ico" alt="screenshot" width="16" style="transform: scaleX(-1);"/>
 
 Building a lightweight game engine in Ruby for creating simple multiplayer games.
 
