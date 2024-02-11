@@ -14,11 +14,11 @@ class Spritesheet
 
   def draw(x, y)
     @frames[@current_frame].draw_as_quad(
-      x - @frame_width / 2, y - @frame_height / 2, Gosu::Color::WHITE,
-      x + @frame_width / 2, y - @frame_height / 2, Gosu::Color::WHITE,
-      x - @frame_width / 2, y + @frame_height / 2, Gosu::Color::WHITE,
-      x + @frame_width / 2, y + @frame_height / 2, Gosu::Color::WHITE,
-      0
+        x, y, Gosu::Color::WHITE,
+        x + @frame_width, y, Gosu::Color::WHITE,
+        x, y + @frame_height, Gosu::Color::WHITE,
+        x + @frame_width, y + @frame_height, Gosu::Color::WHITE,
+        0
     )
   end
 

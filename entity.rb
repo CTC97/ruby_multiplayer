@@ -21,7 +21,7 @@ class Entity
       @current_frame = 0
       #@color = Gosu::Color.new(255, rand(255), rand(255), rand(255))
       @font = Gosu::Font.new(20)
-  
+      @window = window
       @speed = 5
     end
   
@@ -36,24 +36,26 @@ class Entity
       move_right if Gosu.button_down?(Gosu::KB_D)
       move_up if Gosu.button_down?(Gosu::KB_W)
       move_down if Gosu.button_down?(Gosu::KB_S)
+
+      puts "entity: (#{@x}, #{@y})"
     end
   
     private
   
     def move_left
-      @x -= @speed if @x > 50
+      @x -= @speed if @x > 32
     end
   
     def move_right
-      @x += @speed if @x < 800 - 50
+      @x += @speed if @x < @window.width - 32
     end
   
     def move_up
-      @y -= @speed if @y > 50
+      @y -= @speed if @y > 32
     end
   
     def move_down
-      @y += @speed if @y < 600 - 50
+      @y += @speed if @y < @window.height - 32
     end
   
     def window_width

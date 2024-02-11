@@ -1,10 +1,11 @@
 require 'gosu'
 require_relative 'client'
 require_relative 'entity'
+require_relative 'tilesheet'
 
 class GameWindow < Gosu::Window
   def initialize(client)
-    super(800, 600, false)
+    super(832, 640, false)
     self.caption = 'client server testing'
 
     @x = @y = 20
@@ -21,6 +22,21 @@ class GameWindow < Gosu::Window
     @font = Gosu::Font.new(self, Gosu::default_font_name, 20)
 
     @tick_frame = 0
+
+    # this will ultimately be stored server side, but just testing for now
+    @tilesheet = Tilesheet.new('other/tilesheet64.png', 64, 64)
+    @tileset = [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0],
+      [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0],
+      [0, 0, 3, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0],
+    ]
   end
 
   def update
@@ -40,19 +56,31 @@ class GameWindow < Gosu::Window
 
     # Update the players' positions based on received data
     # This field will be the post-Marshal'd data
-    puts "\n<<<<<"
+    # puts "\n<<<<<"
     received_data = @client.received_data
-    puts received_data
-    puts ">>>>>>"
+    # puts received_data
+    # puts ">>>>>>"
 
     update_local_map(received_data[:data]) if received_data&.key?(:type) && received_data[:type] == "big"
     # update_player_info(received_data) if received_data&.key?(:player_id)
     # update_entity_info(received_data) if received_data&.key?(:entity_id)
   end
 
+  def draw_tilemap()
+    @tileset.each_with_index do |row, y|
+      row.each_with_index do |val, x|
+        #puts "drawing at (#{x*@tilesheet.frame_width}, #{y*@tilesheet.frame_height})"
+        @tilesheet.draw(x*@tilesheet.frame_width, y*@tilesheet.frame_height, val)
+      end
+    end
+  end
+
   def draw
     # Set background color to pink
     draw_quad(0, 0, Gosu::Color.new(255, 182, 193), width, 0, Gosu::Color.new(255, 182, 193), 0, height, Gosu::Color.new(255, 182, 193), width, height, Gosu::Color.new(255, 182, 193))
+
+    # draw the map on top of the background (can ultimately remove background)
+    draw_tilemap()
 
     # Draw squares for all players
     @local_players_map.each do |player_id, player_data|
