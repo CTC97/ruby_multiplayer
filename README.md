@@ -14,7 +14,7 @@ Simple spritesheet class, needs to be cleaned up, but works within entity class.
 ### tilesheet.rb
 Similar to the spritesheet class, but takes tilemap in. 2d array is used to draw tiles based on tilesheet. This 2d array will be stored server side.
 
-<img src="other/screenshot_2-10.png" alt="screenshot" width="600"/>
+<img src="other/screenshot_2-10_b.png" alt="screenshot" width="600"/>
 
 ### To Do:
 - Update data communication to send marshl'd entity object data, this data will be stored in simpler structures on the client and server ends: {entity_id => [entity object]}
