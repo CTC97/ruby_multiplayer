@@ -9,14 +9,17 @@
 # consider custom serialization (marshal dumping) if there are performance issues down the line
 
 # data handling can become much simpler, just storing hash maps of objects unpacked directly from their marshal data
+require_relative 'spritesheet'
 
 class Entity
     attr_reader :x, :y, :color
 
-    def initialize
+    def initialize(window)
       @x = rand(500) + 50
       @y = rand(500) + 50
-      @color = Gosu::Color.new(255, rand(255), rand(255), rand(255))
+      @spritesheet = Spritesheet.new(window, 'other/testsheet.png', 32, 32)
+      @current_frame = 0
+      #@color = Gosu::Color.new(255, rand(255), rand(255), rand(255))
       @font = Gosu::Font.new(20)
   
       @speed = 5
@@ -24,10 +27,11 @@ class Entity
   
     def draw
       @font.draw_text("ENTITY", @x - 6, @y - 16, 1, 0.8, 0.8, Gosu::Color::WHITE)
-      Gosu.draw_rect(@x, @y, 50, 50, Gosu::Color::BLACK)
+      @spritesheet.draw(@x, @y)
     end
   
-    def update
+    def update(tick)
+      @spritesheet.update(tick)
       move_left if Gosu.button_down?(Gosu::KB_A)
       move_right if Gosu.button_down?(Gosu::KB_D)
       move_up if Gosu.button_down?(Gosu::KB_W)

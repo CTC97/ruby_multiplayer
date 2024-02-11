@@ -14,15 +14,18 @@ class GameWindow < Gosu::Window
     @local_overworld_map = {}
     @color = random_gosu_color
 
-    @entity = Entity.new
+    @entity = Entity.new(self)
 
     puts @local_player_id
 
     @font = Gosu::Font.new(self, Gosu::default_font_name, 20)
+
+    @tick_frame = 0
   end
 
   def update
-    @entity.update
+    @tick_frame = (@tick_frame+1) % 60
+    @entity.update(@tick_frame)
 
     move_left if Gosu.button_down?(Gosu::KB_LEFT)
     move_right if Gosu.button_down?(Gosu::KB_RIGHT)
