@@ -3,6 +3,7 @@ require_relative 'client'
 require_relative 'entity'
 require_relative 'tilesheet'
 require_relative 'camera'
+require_relative 'chunkManager'
 
 class GameWindow < Gosu::Window
   def initialize(client)
@@ -27,31 +28,19 @@ class GameWindow < Gosu::Window
 
     # this will ultimately be stored server side, but just testing for now
     @tilesheet = Tilesheet.new('other/tilesheet64.png', 64, 64)
-    @tileset = [
-      [1, 2, 0, 3, 2, 1, 1, 0, 2, 3, 3, 0, 2, 1, 0, 1],
-      [2, 1, 3, 0, 2, 2, 3, 0, 2, 1, 0, 2, 1, 3, 1, 2],
-      [0, 3, 1, 1, 3, 2, 1, 0, 3, 2, 3, 0, 1, 2, 3, 0],
-      [2, 0, 3, 2, 3, 0, 1, 2, 3, 0, 2, 1, 2, 0, 2, 1],
-      [3, 0, 2, 1, 0, 3, 2, 1, 3, 0, 0, 1, 2, 3, 1, 2],
-      [3, 2, 0, 2, 1, 3, 1, 0, 2, 2, 3, 0, 3, 1, 2, 3],
-      [1, 0, 1, 3, 0, 2, 1, 2, 3, 2, 0, 2, 1, 1, 0, 3],
-      [0, 2, 3, 2, 1, 1, 2, 0, 3, 0, 2, 3, 2, 1, 1, 2],
-      [0, 1, 2, 0, 1, 3, 2, 2, 0, 3, 2, 3, 0, 1, 2, 3],
-      [0, 3, 0, 2, 3, 2, 1, 1, 2, 0, 2, 1, 1, 0, 3, 1],
-      [2, 3, 2, 1, 1, 2, 3, 0, 3, 1, 2, 3, 2, 1, 0, 3],
-      [1, 2, 0, 3, 2, 1, 1, 0, 2, 3, 3, 0, 2, 1, 0, 1],
-      [2, 1, 3, 0, 2, 2, 3, 0, 2, 1, 0, 2, 1, 3, 1, 2],
-      [0, 3, 1, 1, 3, 2, 1, 0, 3, 2, 3, 0, 1, 2, 3, 0],
-      [2, 0, 3, 2, 3, 0, 1, 2, 3, 0, 2, 1, 2, 0, 2, 1],
-      [3, 0, 2, 1, 0, 3, 2, 1, 3, 0, 0, 1, 2, 3, 1, 2]
-    ]
-    
+
+    @chunkManager = ChunkManager.new(16, 16)
+
+    @tileset = @chunkManager.generate_chunk(0, 0)
+
+    #puts @chunkManager.chunk_map
     
   end
 
   def update
     @tick_frame = (@tick_frame+1) % 60
     @entity.update(@tick_frame)
+    puts "#{@entity.fetch_chunk(64,16)}"
     @camera.update()
 
     move_left if Gosu.button_down?(Gosu::KB_LEFT)
@@ -77,11 +66,12 @@ class GameWindow < Gosu::Window
     # update_entity_info(received_data) if received_data&.key?(:entity_id)
   end
 
-  def draw_tilemap()
-    @tileset.each_with_index do |row, y|
+  def draw_tilemap(tile_size, chunk_size, x_offset, y_offset, tileset)
+    player_chunk = @entity.fetch_chunk(64, 16)
+
+    tileset.each_with_index do |row, y|
       row.each_with_index do |val, x|
-        #puts "drawing at (#{x*@tilesheet.frame_width}, #{y*@tilesheet.frame_height})"
-        @tilesheet.draw(x*@tilesheet.frame_width, y*@tilesheet.frame_height, val)
+        @tilesheet.draw(((tile_size * chunk_size) * (x_offset + player_chunk[0])) + x*@tilesheet.frame_width, ((tile_size * chunk_size) * (y_offset + player_chunk[1])) + y*@tilesheet.frame_height, val)
       end
     end
   end
@@ -91,13 +81,20 @@ class GameWindow < Gosu::Window
       # Set background color to pink
       draw_quad(0, 0, Gosu::Color.new(255, 182, 193), width, 0, Gosu::Color.new(255, 182, 193), 0, height, Gosu::Color.new(255, 182, 193), width, height, Gosu::Color.new(255, 182, 193))
 
+      relevant_chunks = @chunkManager.retreive_relevant_chunks(@entity.fetch_chunk(64, 16))
+
       # draw the map on top of the background (can ultimately remove background)
-      draw_tilemap()
+      (-1..1).each do |x|
+        # Iterate through y from -1 to 1
+        (-1..1).each do |y|
+          draw_tilemap(64, 16, x, y, relevant_chunks[x+1][y+1])
+        end
+      end
+      
 
       # Draw squares for all players
       @local_players_map.each do |player_id, player_data|
         if !player_data.empty?
-          #puts player_data
           x, y, color = player_data[:x], player_data[:y], hash_to_color(player_data[:color])
           Gosu.draw_rect(x, y, 50, 50, color)
           @font.draw_text(player_data[:player_id].to_s, x - 6, y - 16, 1, 0.8, 0.8, Gosu::Color::WHITE)
@@ -107,7 +104,6 @@ class GameWindow < Gosu::Window
 
       @local_overworld_map.each do |ow_id, ow_data|
         if !ow_data.empty?
-          #puts ow_data
           x, y, color = ow_data[:x], ow_data[:y], hash_to_color(ow_data[:color])
           Gosu.draw_rect(x, y, 50, 50, color)
           @font.draw_text(ow_data[:entity_id].to_s, x - 6, y - 16, 1, 0.8, 0.8, Gosu::Color::WHITE)
@@ -126,11 +122,9 @@ class GameWindow < Gosu::Window
   def update_local_map(received_data)
     check_collisions()
 
-    #puts "in local update"
-    #puts received_data
     player_data_map = received_data[:player_data]
     overworld_data_map = received_data[:overworld_data]
-    #puts "here!"
+
     if !player_data_map.empty?
       player_data_map.each do |player_id, data|
         next if @local_player_id == data[:player_id]
@@ -158,8 +152,6 @@ class GameWindow < Gosu::Window
         @local_overworld_map[ow_id] = data
       end
     end
-    #puts @local_players_map
-    #puts "there\n\n\n"
   end
 
   def lerp(start, target, alpha)
@@ -185,14 +177,11 @@ class GameWindow < Gosu::Window
   def check_collisions
     @local_overworld_map.each do |_id, ow_data|
       if !ow_data[:x].nil? && !ow_data[:y].nil?
-       # puts "collision check on #{_id}"
         if collision?(@x, @y, 50, 50, ow_data[:x], ow_data[:y], 50, 50)
           # kill globally
           #@client.send_data(kill_entity: true, entity_id: _id)
           @client.send_data(type: "overworld_kill", overworld_id: _id)
           
-         # puts "clientside"
-          #puts @overworld_entities
         end
       end
     end

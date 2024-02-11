@@ -1,5 +1,8 @@
-## Ruby Multiplayer Engine
+## <img src="other/ruby.ico" alt="screenshot" width="16"/> Ruby Multiplayer Engine <img src="other/ruby.ico" alt="screenshot" width="16"/>
+
 Building a lightweight game engine in Ruby for creating simple multiplayer games.
+
+<img src="other/screenshot_2-11.png" alt="screenshot" width="600"/>
 
 ### client.rb
 Simple TCPSocket that sends and receives data.
@@ -15,8 +18,5 @@ Simple spritesheet class, needs to be cleaned up, but works within entity class.
 Similar to the spritesheet class, but takes tilemap in. 2d array is used to draw tiles based on tilesheet. This 2d array will be stored server side.
 ### camera.rb
 Small camera class built on top of Gosu.translate that focuses on the passed object (in this case, the player/entity).
-
-<img src="other/screenshot_2-10_b.png" alt="screenshot" width="600"/>
-
-### To Do:
-- Update data communication to send marshl'd entity object data, this data will be stored in simpler structures on the client and server ends: {entity_id => [entity object]}
+### chunkManager.rb
+Randomly generates chunks (fully random right now, will change to simplex noise) and stores chunks. Only the 9 relevant chunks are loaded on each update. Chunks are called back as they become relevant.

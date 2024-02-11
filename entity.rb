@@ -36,8 +36,10 @@ class Entity
       move_right if Gosu.button_down?(Gosu::KB_D)
       move_up if Gosu.button_down?(Gosu::KB_W)
       move_down if Gosu.button_down?(Gosu::KB_S)
+    end
 
-      puts "entity: (#{@x}, #{@y})"
+    def fetch_chunk(tileSize, chunkSize)
+        [(@x / tileSize) / chunkSize, (@y / tileSize) / chunkSize]
     end
   
     private
