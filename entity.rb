@@ -43,19 +43,19 @@ class Entity
     private
   
     def move_left
-      @x -= @speed if @x > 32
+      @x -= @speed #if @x > 32
     end
   
     def move_right
-      @x += @speed if @x < @window.width - 32
+      @x += @speed #if @x < @window.width - 32
     end
   
     def move_up
-      @y -= @speed if @y > 32
+      @y -= @speed #if @y > 32
     end
   
     def move_down
-      @y += @speed if @y < @window.height - 32
+      @y += @speed #if @y < @window.height - 32
     end
   
     def window_width

@@ -2,6 +2,7 @@ require 'gosu'
 require_relative 'client'
 require_relative 'entity'
 require_relative 'tilesheet'
+require_relative 'camera'
 
 class GameWindow < Gosu::Window
   def initialize(client)
@@ -16,6 +17,7 @@ class GameWindow < Gosu::Window
     @color = random_gosu_color
 
     @entity = Entity.new(self)
+    @camera = Camera.new(self, @entity)
 
     puts @local_player_id
 
@@ -26,22 +28,31 @@ class GameWindow < Gosu::Window
     # this will ultimately be stored server side, but just testing for now
     @tilesheet = Tilesheet.new('other/tilesheet64.png', 64, 64)
     @tileset = [
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0],
-      [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0],
-      [0, 0, 3, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0],
+      [1, 2, 0, 3, 2, 1, 1, 0, 2, 3, 3, 0, 2, 1, 0, 1],
+      [2, 1, 3, 0, 2, 2, 3, 0, 2, 1, 0, 2, 1, 3, 1, 2],
+      [0, 3, 1, 1, 3, 2, 1, 0, 3, 2, 3, 0, 1, 2, 3, 0],
+      [2, 0, 3, 2, 3, 0, 1, 2, 3, 0, 2, 1, 2, 0, 2, 1],
+      [3, 0, 2, 1, 0, 3, 2, 1, 3, 0, 0, 1, 2, 3, 1, 2],
+      [3, 2, 0, 2, 1, 3, 1, 0, 2, 2, 3, 0, 3, 1, 2, 3],
+      [1, 0, 1, 3, 0, 2, 1, 2, 3, 2, 0, 2, 1, 1, 0, 3],
+      [0, 2, 3, 2, 1, 1, 2, 0, 3, 0, 2, 3, 2, 1, 1, 2],
+      [0, 1, 2, 0, 1, 3, 2, 2, 0, 3, 2, 3, 0, 1, 2, 3],
+      [0, 3, 0, 2, 3, 2, 1, 1, 2, 0, 2, 1, 1, 0, 3, 1],
+      [2, 3, 2, 1, 1, 2, 3, 0, 3, 1, 2, 3, 2, 1, 0, 3],
+      [1, 2, 0, 3, 2, 1, 1, 0, 2, 3, 3, 0, 2, 1, 0, 1],
+      [2, 1, 3, 0, 2, 2, 3, 0, 2, 1, 0, 2, 1, 3, 1, 2],
+      [0, 3, 1, 1, 3, 2, 1, 0, 3, 2, 3, 0, 1, 2, 3, 0],
+      [2, 0, 3, 2, 3, 0, 1, 2, 3, 0, 2, 1, 2, 0, 2, 1],
+      [3, 0, 2, 1, 0, 3, 2, 1, 3, 0, 0, 1, 2, 3, 1, 2]
     ]
+    
+    
   end
 
   def update
     @tick_frame = (@tick_frame+1) % 60
     @entity.update(@tick_frame)
+    @camera.update()
 
     move_left if Gosu.button_down?(Gosu::KB_LEFT)
     move_right if Gosu.button_down?(Gosu::KB_RIGHT)
@@ -76,47 +87,39 @@ class GameWindow < Gosu::Window
   end
 
   def draw
-    # Set background color to pink
-    draw_quad(0, 0, Gosu::Color.new(255, 182, 193), width, 0, Gosu::Color.new(255, 182, 193), 0, height, Gosu::Color.new(255, 182, 193), width, height, Gosu::Color.new(255, 182, 193))
+    @camera.translate() do 
+      # Set background color to pink
+      draw_quad(0, 0, Gosu::Color.new(255, 182, 193), width, 0, Gosu::Color.new(255, 182, 193), 0, height, Gosu::Color.new(255, 182, 193), width, height, Gosu::Color.new(255, 182, 193))
 
-    # draw the map on top of the background (can ultimately remove background)
-    draw_tilemap()
+      # draw the map on top of the background (can ultimately remove background)
+      draw_tilemap()
 
-    # Draw squares for all players
-    @local_players_map.each do |player_id, player_data|
-      if !player_data.empty?
-        #puts player_data
-        x, y, color = player_data[:x], player_data[:y], hash_to_color(player_data[:color])
-        Gosu.draw_rect(x, y, 50, 50, color)
-        @font.draw_text(player_data[:player_id].to_s, x - 6, y - 16, 1, 0.8, 0.8, Gosu::Color::WHITE)
+      # Draw squares for all players
+      @local_players_map.each do |player_id, player_data|
+        if !player_data.empty?
+          #puts player_data
+          x, y, color = player_data[:x], player_data[:y], hash_to_color(player_data[:color])
+          Gosu.draw_rect(x, y, 50, 50, color)
+          @font.draw_text(player_data[:player_id].to_s, x - 6, y - 16, 1, 0.8, 0.8, Gosu::Color::WHITE)
+        end
+        #Gosu.draw_text(player_info[:player_id].to_s, x + 25, y + 25, 1, 1, 10, Gosu::Color::BLACK, Gosu.default_font_name)
       end
-      #Gosu.draw_text(player_info[:player_id].to_s, x + 25, y + 25, 1, 1, 10, Gosu::Color::BLACK, Gosu.default_font_name)
-    end
 
-    @local_overworld_map.each do |ow_id, ow_data|
-      if !ow_data.empty?
-        #puts ow_data
-        x, y, color = ow_data[:x], ow_data[:y], hash_to_color(ow_data[:color])
-        Gosu.draw_rect(x, y, 50, 50, color)
-        @font.draw_text(ow_data[:entity_id].to_s, x - 6, y - 16, 1, 0.8, 0.8, Gosu::Color::WHITE)
+      @local_overworld_map.each do |ow_id, ow_data|
+        if !ow_data.empty?
+          #puts ow_data
+          x, y, color = ow_data[:x], ow_data[:y], hash_to_color(ow_data[:color])
+          Gosu.draw_rect(x, y, 50, 50, color)
+          @font.draw_text(ow_data[:entity_id].to_s, x - 6, y - 16, 1, 0.8, 0.8, Gosu::Color::WHITE)
+        end
       end
+
+      # Draw square for client player
+      Gosu.draw_rect(@x, @y, 50, 50, @color)
+      @font.draw_text(@local_player_id.to_s, @x-6, @y-16, 1, 0.8, 0.8, Gosu::Color::WHITE)
+
+      @entity.draw
     end
-
-    # # Draw squares for overworld entities
-    # @overworld_entities.each do |_id, entity_info|
-    #   if !entity_info[:color].nil?
-    #     puts entity_info
-    #     x, y, color = entity_info[:x], entity_info[:y], hash_to_color(entity_info[:color])
-    #     Gosu.draw_rect(x, y, 50, 50, color)
-    #     @font.draw_text(entity_info[:entity_id].to_s, x - 6, y - 16, 1, 0.8, 0.8, Gosu::Color::WHITE)
-    #   end
-    # end
-
-    # Draw square for client player
-    Gosu.draw_rect(@x, @y, 50, 50, @color)
-    @font.draw_text(@local_player_id.to_s, @x-6, @y-16, 1, 0.8, 0.8, Gosu::Color::WHITE)
-
-    @entity.draw
   end
 
 

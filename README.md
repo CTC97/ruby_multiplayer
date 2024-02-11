@@ -13,6 +13,8 @@ Simple abstraction for entity, but will need to be abstracted further up (curren
 Simple spritesheet class, needs to be cleaned up, but works within entity class.
 ### tilesheet.rb
 Similar to the spritesheet class, but takes tilemap in. 2d array is used to draw tiles based on tilesheet. This 2d array will be stored server side.
+### camera.rb
+Small camera class built on top of Gosu.translate that focuses on the passed object (in this case, the player/entity).
 
 <img src="other/screenshot_2-10_b.png" alt="screenshot" width="600"/>
 
