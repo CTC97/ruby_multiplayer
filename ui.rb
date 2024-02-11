@@ -1,5 +1,6 @@
 require 'gosu'
 require_relative 'client'
+require_relative 'entity'
 
 class GameWindow < Gosu::Window
   def initialize(client)
@@ -13,12 +14,16 @@ class GameWindow < Gosu::Window
     @local_overworld_map = {}
     @color = random_gosu_color
 
+    @entity = Entity.new
+
     puts @local_player_id
 
     @font = Gosu::Font.new(self, Gosu::default_font_name, 20)
   end
 
   def update
+    @entity.update
+
     move_left if Gosu.button_down?(Gosu::KB_LEFT)
     move_right if Gosu.button_down?(Gosu::KB_RIGHT)
     move_up if Gosu.button_down?(Gosu::KB_UP)
@@ -79,6 +84,8 @@ class GameWindow < Gosu::Window
     # Draw square for client player
     Gosu.draw_rect(@x, @y, 50, 50, @color)
     @font.draw_text(@local_player_id.to_s, @x-6, @y-16, 1, 0.8, 0.8, Gosu::Color::WHITE)
+
+    @entity.draw
   end
 
 
