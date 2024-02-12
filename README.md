@@ -1,4 +1,4 @@
-## <img src="other/ruby.ico" alt="screenshot" width="16"/> Ruby Multiplayer Engine <img src="other/ruby.ico" alt="screenshot" width="16" style="transform: scaleX(-1);"/>
+## <img src="other/ruby.ico" alt="screenshot" width="16"/> RubyJoy - 2D Multiplayer Game Engine <img src="other/ruby.ico" alt="screenshot" width="16" style="transform: scaleX(-1);"/>
 
 Building a lightweight game engine in Ruby for creating simple multiplayer games.
 
@@ -22,6 +22,14 @@ Small camera class built on top of Gosu.translate that focuses on the passed obj
 Randomly generates chunks (fully random right now, will change to simplex noise) and stores chunks. Only the 9 relevant chunks are loaded on each update. Chunks are called back as they become relevant.
 
 ----
+
+Move server and client data handling into hash maps that map to functions:
+
+```
+@handling_map = {
+    "<message[:type]>" => [:<handle_method>, <message[:data]>]
+}
+```
 
 Ideas for the chunk manager and multiplayer.
 * Chunk manager can be server side - all players that join the server will read from the same chunks, and if they discover a new chunk, their client will report it back to the server.
