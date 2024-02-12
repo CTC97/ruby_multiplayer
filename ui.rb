@@ -8,7 +8,7 @@ require_relative 'chunkManager'
 class GameWindow < Gosu::Window
   def initialize(client)
     super(1020, 620, false)
-    self.caption = 'client server testing'
+    self.caption = 'RubyJoy a.0'
 
     @x = @y = 20
     @client = client
@@ -40,7 +40,7 @@ class GameWindow < Gosu::Window
     @tick_frame = (@tick_frame+1) % 60
 
     @entity.update(@tick_frame)
-    @chunkManager.check_entity_collision(@entity, @entity.fetch_chunk(64, 16), @entity.fetch_tile(64,16), 64, 64, [4])
+    @chunkManager.check_entity_collision(@entity, @entity.fetch_chunk(64, 16), @entity.fetch_tile(64,16), 64, 64, [4, 5, 6, 7, 8])
 
     puts "player at : #{@entity.fetch_chunk(64,16)}, #{@entity.fetch_tile(64,16)}, [#{@entity.x}, #{@entity.y}]"
 

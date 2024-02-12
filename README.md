@@ -2,7 +2,7 @@
 
 Building a lightweight game engine in Ruby for creating simple multiplayer games.
 
-<img src="other/screenshot_2-11_b.png" alt="screenshot" width="600"/>
+<img src="other/screenshot_2-11_c.png" alt="screenshot" width="600"/>
 
 ### client.rb
 Simple TCPSocket that sends and receives data.

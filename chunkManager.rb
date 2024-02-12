@@ -5,22 +5,79 @@ class ChunkManager
         @chunk_map = {}
         @x_dim = x_dim
         @y_dim = y_dim
+
+        @seed_map = {
+           # 0 => [0],
+            1 => [1,2,3],
+            2 => [1,2,3],
+            3 => [1,2,3],
+            4 => [4,5,6,7,8],
+            5 => [4,5,6,7,8],
+            6 => [4,5,6,7,8],
+            7 => [4,5,6,7,8],
+            8 => [4,5,6,7,8]
+        }
     end
 
     def generate_chunk(chunk_x, chunk_y)
         chunk = Array.new(@y_dim) { Array.new(@x_dim) }
       
-        @y_dim.times do |i|
-          @x_dim.times do |j|
-            chunk[i][j] = rand(4)  
+        # initial layout and seeding
 
-            # dont spawn chest at the edge of a chunk
-            if !(i < 3 || i > 12 || j < 3 || j > 12)
-                bit = rand(25) == 0 ? 1 : 0
-                chunk[i][j] = 4 if bit == 1
+        @y_dim.times do |y| # y
+            @x_dim.times do |x| # x
+              chunk[y][x] = 0
+      
+              chunk[y][x] = 2 if rand(50) < 1 
+              chunk[y][x] = 1 if rand(50) < 1 
+              chunk[y][x] = 3 if rand(50) < 1 
+              chunk[y][x] = 4 if rand(100) < 1
+              chunk[y][x] = 5 if rand(100) < 1
+              chunk[y][x] = 6 if rand(100) < 1
+              chunk[y][x] = 7 if rand(100) < 1
+              chunk[y][x] = 8 if rand(100) < 1
             end
           end
-        end
+      
+          @y_dim.times do |y|
+              @x_dim.times do |x|
+      
+                convert_strength = nil
+      
+                convert_strength = 60 if [1,2,3].include?(chunk[y][x])
+                convert_strength = 20 if [4,5,6,7,8].include?(chunk[y][x])
+            
+      
+                if chunk[y][x] != 0
+                  # Adjust these probabilities as needed
+                  if rand(100) < convert_strength
+                    neighbor_x = x + rand(-1..1)
+                    neighbor_y = y + rand(-1..1)
+          
+                    # Ensure the neighbor is within bounds
+                    if (0..(@x_dim - 1)).cover?(neighbor_x) && (0..(@y_dim - 1)).cover?(neighbor_y)
+                      chunk[neighbor_y][neighbor_x] = @seed_map[chunk[y][x]].sample
+                    end
+                  end
+                end
+              end
+            end
+      
+            @y_dim.times do |y|
+              @x_dim.times do |x|
+                if chunk[y][x] != 0
+                  rand(5).times do
+                    neighbor_x = x + rand(-1..1)
+                    neighbor_y = y + rand(-1..1)
+          
+                    next unless (0..(@x_dim - 1)).cover?(neighbor_x) && (0..(@y_dim - 1)).cover?(neighbor_y)
+          
+                    # Convert the neighbor with a probability
+                    chunk[neighbor_y][neighbor_x] = chunk[y][x] if rand(100) < 30
+                  end
+                end
+              end
+            end
       
         chunk_key = [chunk_x, chunk_y]
         @chunk_map[chunk_key] = Marshal.dump(chunk)
