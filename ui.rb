@@ -7,7 +7,7 @@ require_relative 'chunkManager'
 
 class GameWindow < Gosu::Window
   def initialize(client)
-    super(832, 640, false)
+    super(1020, 620, false)
     self.caption = 'client server testing'
 
     @x = @y = 20
@@ -30,7 +30,6 @@ class GameWindow < Gosu::Window
     @tilesheet = Tilesheet.new('other/tilesheet64.png', 64, 64)
 
     @chunkManager = ChunkManager.new(16, 16)
-
     @tileset = @chunkManager.generate_chunk(0, 0)
 
     #puts @chunkManager.chunk_map
@@ -39,8 +38,12 @@ class GameWindow < Gosu::Window
 
   def update
     @tick_frame = (@tick_frame+1) % 60
+
     @entity.update(@tick_frame)
-    puts "#{@entity.fetch_chunk(64,16)}"
+    @chunkManager.check_entity_collision(@entity, @entity.fetch_chunk(64, 16), @entity.fetch_tile(64,16), 64, 64, [4])
+
+    puts "player at : #{@entity.fetch_chunk(64,16)}, #{@entity.fetch_tile(64,16)}, [#{@entity.x}, #{@entity.y}]"
+
     @camera.update()
 
     move_left if Gosu.button_down?(Gosu::KB_LEFT)
@@ -62,9 +65,14 @@ class GameWindow < Gosu::Window
     # puts ">>>>>>"
 
     update_local_map(received_data[:data]) if received_data&.key?(:type) && received_data[:type] == "big"
+    #supplyChunkManager(received_data[:data]) if received_data&.key?(:type) && received_data[:type] == "chunkManager"
     # update_player_info(received_data) if received_data&.key?(:player_id)
     # update_entity_info(received_data) if received_data&.key?(:entity_id)
   end
+
+  # def supplyChunkManager(chunkManager)
+  #   @chunkManager = chunkManager
+  # end
 
   def draw_tilemap(tile_size, chunk_size, x_offset, y_offset, tileset)
     player_chunk = @entity.fetch_chunk(64, 16)

@@ -14,6 +14,7 @@ require 'json'
 # }
 
 class Server
+
   def initialize(port)
     @server = TCPServer.new(port)
     @clients = []
@@ -25,6 +26,7 @@ class Server
     }
     @client_player_map = {}
     puts "Server listening on port #{port}"
+
   end
 
   def start

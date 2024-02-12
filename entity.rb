@@ -17,7 +17,10 @@ class Entity
     def initialize(window)
       @x = rand(500) + 50
       @y = rand(500) + 50
-      @spritesheet = Spritesheet.new(window, 'other/testsheet.png', 32, 32)
+      @canMoveLeft = @canMoveRight = @canMoveUp = @canMoveDown = true
+      @width = 32 # pull out to parameter
+      @height = 32 # pull out to parameter
+      @spritesheet = Spritesheet.new(window, 'other/testsheet.png', @width, @height)
       @current_frame = 0
       #@color = Gosu::Color.new(255, rand(255), rand(255), rand(255))
       @font = Gosu::Font.new(20)
@@ -32,32 +35,100 @@ class Entity
   
     def update(tick)
       @spritesheet.update(tick)
-      move_left if Gosu.button_down?(Gosu::KB_A)
-      move_right if Gosu.button_down?(Gosu::KB_D)
-      move_up if Gosu.button_down?(Gosu::KB_W)
-      move_down if Gosu.button_down?(Gosu::KB_S)
+      move_left if Gosu.button_down?(Gosu::KB_A) && @canMoveLeft
+      move_right if Gosu.button_down?(Gosu::KB_D) && @canMoveRight
+      move_up if Gosu.button_down?(Gosu::KB_W) && @canMoveUp
+      move_down if Gosu.button_down?(Gosu::KB_S) && @canMoveDown
+      @canMoveLeft = @canMoveRight = @canMoveUp = @canMoveDown = true
     end
 
     def fetch_chunk(tileSize, chunkSize)
         [(@x / tileSize) / chunkSize, (@y / tileSize) / chunkSize]
     end
-  
+
+    def fetch_tile(tileSize, chunkSize)
+        [(@x / tileSize) % chunkSize, (@y / tileSize) % chunkSize]
+    end
+    
+    # tile_x, tile_y - global position of tile in question
+    # tile_width, tile_height - self explanatory
+    def handle_collision(tile_val, collision_tiles, tile_x, tile_y, tile_width, tile_height)
+      #puts "checking #{tile_val} at #{tile_x}, #{tile_y}"
+
+      # # Calculate the boundaries of the colliding tile
+      tile_right = tile_x + tile_width
+      tile_bottom = tile_y + tile_height
+    
+      # # Calculate the boundaries of the entity
+      entity_left = @x
+      entity_right = @x + @width
+      entity_top = @y
+      entity_bottom = @y + @height
+    
+      puts "checking collision"
+
+      # Check for intersection
+      if entity_right > tile_x && entity_left < tile_right &&
+         entity_bottom > tile_y && entity_top < tile_bottom
+        # Collision detected, adjust entity position
+        #puts "collision!"
+        adjust_entity_position(tile_x, tile_y, tile_width, tile_height)
+      end
+    end
+
+    def adjust_entity_position(tile_x, tile_y, tile_width, tile_height)
+      puts "ADJUSTING"
+      
+      # Determine the direction of the collision (left, right, top, or bottom)
+      x_collision = @x + @width / 2 < tile_x + tile_width / 2
+      y_collision = @y + @height / 2 < tile_y + tile_height / 2
+    
+      # Adjust the entity's position based on the collision direction
+      if x_collision
+        @canMoveRight = false
+      else
+        @canMoveLeft = false
+      end
+    
+      if y_collision
+        @canMoveDown = false
+      else
+        @canMoveUp = false
+      end
+    end
+
     private
   
     def move_left
+      oldX = @x
       @x -= @speed #if @x > 32
+      if !@canMoveLeft
+        @x = oldX
+      end
     end
   
     def move_right
-      @x += @speed #if @x < @window.width - 32
+      oldX = @x
+      @x += @speed #if @x > 32
+      if !@canMoveRight
+        @x = oldX
+      end
     end
   
     def move_up
-      @y -= @speed #if @y > 32
+      oldY = @y
+      @y -= @speed #if @x > 32
+      if !@canMoveUp
+        @y = oldX
+      end
     end
   
     def move_down
-      @y += @speed #if @y < @window.height - 32
+      oldY = @y
+      @y += @speed #if @x > 32
+      if !@canMoveDown
+        @y = oldX
+      end
     end
   
     def window_width

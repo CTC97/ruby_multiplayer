@@ -4,7 +4,7 @@ class Tilesheet
   attr_reader :frames, :frame_width, :frame_height
 
   def initialize(filename, frame_width, frame_height)
-    @frames = Gosu::Image.load_tiles(filename, frame_width, frame_height, {tileable: true, retro: true})
+    @frames = Gosu::Image.load_tiles(filename, frame_width, frame_height, {tileable: false, retro: true})
     @num_frames = @frames.length()
     @frame_width = frame_width
     @frame_height = frame_height

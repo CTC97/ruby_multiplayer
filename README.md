@@ -2,7 +2,7 @@
 
 Building a lightweight game engine in Ruby for creating simple multiplayer games.
 
-<img src="other/screenshot_2-11.png" alt="screenshot" width="600"/>
+<img src="other/screenshot_2-11_b.png" alt="screenshot" width="600"/>
 
 ### client.rb
 Simple TCPSocket that sends and receives data.
@@ -20,3 +20,9 @@ Similar to the spritesheet class, but takes tilemap in. 2d array is used to draw
 Small camera class built on top of Gosu.translate that focuses on the passed object (in this case, the player/entity).
 ### chunkManager.rb
 Randomly generates chunks (fully random right now, will change to simplex noise) and stores chunks. Only the 9 relevant chunks are loaded on each update. Chunks are called back as they become relevant.
+
+----
+
+Ideas for the chunk manager and multiplayer.
+* Chunk manager can be server side - all players that join the server will read from the same chunks, and if they discover a new chunk, their client will report it back to the server.
+* Chunk manager can be client side, and can still be multiplayer if the client sends its chunk manager to other connected clients. In this case, new discoveries and chunk reading will have to go from client -> server -> client which is twice as many communications and could be a lot slower.

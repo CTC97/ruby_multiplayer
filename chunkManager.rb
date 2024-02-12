@@ -13,6 +13,12 @@ class ChunkManager
         @y_dim.times do |i|
           @x_dim.times do |j|
             chunk[i][j] = rand(4)  
+
+            # dont spawn chest at the edge of a chunk
+            if !(i < 3 || i > 12 || j < 3 || j > 12)
+                bit = rand(25) == 0 ? 1 : 0
+                chunk[i][j] = 4 if bit == 1
+            end
           end
         end
       
@@ -20,6 +26,61 @@ class ChunkManager
         @chunk_map[chunk_key] = Marshal.dump(chunk)
         #puts retreive_relevant_chunks(0, 0)
         chunk
+    end
+
+    # pull the 8 squares around x and y
+    # [] entity - the entity we're checking
+    # [x] entityChunk - the [x,y] pair to lookup the chunk the entity is in
+    # [] tilLoc - the x,y position of the tile the player is currently on
+    # [] tile_width, tile_height - the dimensions of the tiles in the set
+    # [] collision tiles - array of tiles that are solid
+    def check_entity_collision(entity, entityChunk, tileLoc, tile_width, tile_height, collision_tiles)        
+        chunk = Marshal.load(@chunk_map[entityChunk])
+
+        tile_x = tileLoc[0]
+        tile_y = tileLoc[1]
+
+
+        relevant_tiles = get_relevant_tiles_for_collision(chunk, tile_x, tile_y)
+
+        puts "#{relevant_tiles}"
+
+        if !relevant_tiles.nil?
+            relevant_tiles.each_with_index do |row, cell_y|
+                # Iterate over each element in the row
+                row.each_with_index do |element, cell_x|
+                    # Call the function on each element
+                    next if !collision_tiles.include?(element)
+
+                    local_tile_x = (tile_x) + (cell_x - 1)
+                    local_tile_y = (tile_y) + (cell_y - 1)
+
+                    tile_global_x = (entityChunk[0] * 16) * 64 + local_tile_x * 64
+                    tile_global_y = (entityChunk[1] * 16) * 64 + local_tile_y * 64
+                    puts "tile at : [#{entityChunk[0]}, #{entityChunk[1]}] | [#{local_tile_x}, #{local_tile_y}] | [#{tile_global_x}, #{tile_global_y}]"
+                    entity.handle_collision(element, collision_tiles, tile_global_x, tile_global_y, tile_width, tile_height)
+                end
+            end
+        end
+    end
+
+
+    def get_relevant_tiles_for_collision(array, col_position, row_position)
+        #puts "checking #{array}, #{row_position}, #{col_position}"
+        # Define the size of the smaller arrays (3x3)
+        small_array_size = 3
+      
+        # Check if the specified position is within bounds
+        if row_position >= 0 && row_position + small_array_size <= array.length &&
+           col_position >= 0 && col_position + small_array_size <= array[0].length
+      
+          # Grab the specified 3x3 array
+          small_array = array[row_position-1, small_array_size].map { |r| r[col_position-1, small_array_size] }
+          return small_array
+        else
+          # If out of bounds, return nil or handle it as needed
+          return nil
+        end
     end
 
     def retreive_relevant_chunks(pchunk_coords)
