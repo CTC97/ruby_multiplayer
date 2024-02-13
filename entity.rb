@@ -26,6 +26,8 @@ class Entity
       @font = Gosu::Font.new(20)
       @window = window
       @speed = 5
+
+      @movingTowards = false
     end
   
     def draw
@@ -35,19 +37,33 @@ class Entity
   
     def update(tick)
       @spritesheet.update(tick)
-      move_left if Gosu.button_down?(Gosu::KB_A) && @canMoveLeft
-      move_right if Gosu.button_down?(Gosu::KB_D) && @canMoveRight
-      move_up if Gosu.button_down?(Gosu::KB_W) && @canMoveUp
-      move_down if Gosu.button_down?(Gosu::KB_S) && @canMoveDown
+
+      if !@movingTowards 
+        move_left if Gosu.button_down?(Gosu::KB_A) && @canMoveLeft
+        move_right if Gosu.button_down?(Gosu::KB_D) && @canMoveRight
+        move_up if Gosu.button_down?(Gosu::KB_W) && @canMoveUp
+        move_down if Gosu.button_down?(Gosu::KB_S) && @canMoveDown
+      else
+        distance = Math.sqrt((@dest_x - @x)**2 + (@dest_y - @y)**2)
+
+        # Check if arrived
+        if distance <= 1
+          puts "Arrived at destination!"
+          @movingTowards = false
+        end
+
+        @x += Math.cos(@move_towards_angle) * @speed;
+		    @y += Math.sin(@move_towards_angle) * @speed;
+      end
       @canMoveLeft = @canMoveRight = @canMoveUp = @canMoveDown = true
     end
 
     def fetch_chunk(tileSize, chunkSize)
-        [(@x / tileSize) / chunkSize, (@y / tileSize) / chunkSize]
+        [(@x.to_i / tileSize) / chunkSize, (@y.to_i / tileSize) / chunkSize]
     end
 
     def fetch_tile(tileSize, chunkSize)
-        [(@x / tileSize) % chunkSize, (@y / tileSize) % chunkSize]
+        [(@x.to_i / tileSize) % chunkSize, (@y.to_i / tileSize) % chunkSize]
     end
     
     # tile_x, tile_y - global position of tile in question
@@ -74,6 +90,17 @@ class Entity
         #puts "collision!"
         adjust_entity_position(tile_x, tile_y, tile_width, tile_height)
       end
+    end
+
+    def moveTowards(dest_x, dest_y) 
+      @movingTowards = true
+      @dest_x = dest_x
+      @dest_y = dest_y
+
+      delta_x = dest_x - @x
+      delta_y = dest_y - @y
+
+      @move_towards_angle = Math.atan2(delta_y, delta_x)
     end
 
     def adjust_entity_position(tile_x, tile_y, tile_width, tile_height)

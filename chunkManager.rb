@@ -1,10 +1,14 @@
 class ChunkManager
     attr_reader :chunk_map
 
+    # CREATE A COLLISION TILES ATTRIBUTE
+
     def initialize(x_dim, y_dim)
         @chunk_map = {}
         @x_dim = x_dim
         @y_dim = y_dim
+
+        @collision_set = [4,5,6,7,8]
 
         @seed_map = {
            # 0 => [0],
@@ -78,6 +82,15 @@ class ChunkManager
                 end
               end
             end
+
+            @y_dim.times do |y| 
+              @x_dim.times do |x|
+                if (y < 3 || y > @y_dim -3 || x < 3 || x > @x_dim - 3) && @collision_set.include?(chunk[y][x])
+                  chunk[y][x] = 0
+                end
+              end
+            end
+
       
         chunk_key = [chunk_x, chunk_y]
         @chunk_map[chunk_key] = Marshal.dump(chunk)
@@ -91,7 +104,8 @@ class ChunkManager
     # [] tilLoc - the x,y position of the tile the player is currently on
     # [] tile_width, tile_height - the dimensions of the tiles in the set
     # [] collision tiles - array of tiles that are solid
-    def check_entity_collision(entity, entityChunk, tileLoc, tile_width, tile_height, collision_tiles)        
+    def check_entity_collision(entity, entityChunk, tileLoc, tile_width, tile_height, collision_tiles)     
+        puts "checking entity collision #{entity}, #{entityChunk}, #{tileLoc}"   
         chunk = Marshal.load(@chunk_map[entityChunk])
 
         tile_x = tileLoc[0]

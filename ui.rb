@@ -33,7 +33,7 @@ class GameWindow < Gosu::Window
     @tileset = @chunkManager.generate_chunk(0, 0)
 
     #puts @chunkManager.chunk_map
-    
+    @entity.moveTowards(1000, 1000)
   end
 
   def update
