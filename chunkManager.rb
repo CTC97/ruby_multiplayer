@@ -105,7 +105,7 @@ class ChunkManager
     # [] tile_width, tile_height - the dimensions of the tiles in the set
     # [] collision tiles - array of tiles that are solid
     def check_entity_collision(entity, entityChunk, tileLoc, tile_width, tile_height, collision_tiles)     
-        puts "checking entity collision #{entity}, #{entityChunk}, #{tileLoc}"   
+        #puts "checking entity collision #{entity}, #{entityChunk}, #{tileLoc}"   
         chunk = Marshal.load(@chunk_map[entityChunk])
 
         tile_x = tileLoc[0]
@@ -114,7 +114,7 @@ class ChunkManager
 
         relevant_tiles = get_relevant_tiles_for_collision(chunk, tile_x, tile_y)
 
-        puts "#{relevant_tiles}"
+        #puts "#{relevant_tiles}"
 
         if !relevant_tiles.nil?
             relevant_tiles.each_with_index do |row, cell_y|
@@ -128,7 +128,7 @@ class ChunkManager
 
                     tile_global_x = (entityChunk[0] * 16) * 64 + local_tile_x * 64
                     tile_global_y = (entityChunk[1] * 16) * 64 + local_tile_y * 64
-                    puts "tile at : [#{entityChunk[0]}, #{entityChunk[1]}] | [#{local_tile_x}, #{local_tile_y}] | [#{tile_global_x}, #{tile_global_y}]"
+                    #puts "tile at : [#{entityChunk[0]}, #{entityChunk[1]}] | [#{local_tile_x}, #{local_tile_y}] | [#{tile_global_x}, #{tile_global_y}]"
                     entity.handle_collision(element, collision_tiles, tile_global_x, tile_global_y, tile_width, tile_height)
                 end
             end

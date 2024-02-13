@@ -4,6 +4,7 @@ require_relative 'entity'
 require_relative 'tilesheet'
 require_relative 'camera'
 require_relative 'chunkManager'
+require_relative 'pathManager'
 
 class GameWindow < Gosu::Window
   def initialize(client)
@@ -33,7 +34,9 @@ class GameWindow < Gosu::Window
     @tileset = @chunkManager.generate_chunk(0, 0)
 
     #puts @chunkManager.chunk_map
-    @entity.moveTowards(1000, 1000)
+    #@entity.moveTowards(1000, 1000)
+    #@entity.definePath([[250, 250], [250, 500], [500, 500], [500, 250]])
+    @entity.definePath(PathManager.circlePath(0, 0, 500))
   end
 
   def update
@@ -42,7 +45,7 @@ class GameWindow < Gosu::Window
     @entity.update(@tick_frame)
     @chunkManager.check_entity_collision(@entity, @entity.fetch_chunk(64, 16), @entity.fetch_tile(64,16), 64, 64, [4, 5, 6, 7, 8])
 
-    puts "player at : #{@entity.fetch_chunk(64,16)}, #{@entity.fetch_tile(64,16)}, [#{@entity.x}, #{@entity.y}]"
+    #puts "player at : #{@entity.fetch_chunk(64,16)}, #{@entity.fetch_tile(64,16)}, [#{@entity.x}, #{@entity.y}]"
 
     @camera.update()
 

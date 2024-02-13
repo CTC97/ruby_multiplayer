@@ -28,6 +28,7 @@ class Entity
       @speed = 5
 
       @movingTowards = false
+      @pathing = false
     end
   
     def draw
@@ -45,11 +46,25 @@ class Entity
         move_down if Gosu.button_down?(Gosu::KB_S) && @canMoveDown
       else
         distance = Math.sqrt((@dest_x - @x)**2 + (@dest_y - @y)**2)
-
+        #puts "#{distance}"
         # Check if arrived
-        if distance <= 1
-          puts "Arrived at destination!"
-          @movingTowards = false
+        if distance <= 3
+          puts "\t\tArrived at destination!"
+          if @pathing
+            puts "\t\t\there #{@path_step}, #{@path.length}"
+            if @path_step >= @path.length - 1
+              @path_step = 0
+            else 
+              puts "setting path_step from #{@path_step} => #{@path_step+1}"
+              @path_step += 1 
+              puts "\t\t\t\tthere"
+            end
+            puts "#{@path}, [#{@path_step}]"
+            puts "#{@path[@path_step][0]}, #{@path[@path_step][1]}"
+            moveTowards(@path[@path_step][0], @path[@path_step][1])
+          else
+            @movingTowards = false
+          end
         end
 
         @x += Math.cos(@move_towards_angle) * @speed;
@@ -64,6 +79,27 @@ class Entity
 
     def fetch_tile(tileSize, chunkSize)
         [(@x.to_i / tileSize) % chunkSize, (@y.to_i / tileSize) % chunkSize]
+    end
+
+    def moveTowards(dest_x, dest_y) 
+      puts "\tmoving towards #{dest_x}, #{dest_y}"
+      @movingTowards = true
+      @dest_x = dest_x
+      @dest_y = dest_y
+
+      delta_x = dest_x - @x
+      delta_y = dest_y - @y
+
+      @move_towards_angle = Math.atan2(delta_y, delta_x)
+    end
+
+    # an array of coordinates - ex: [[x, y], [a, b], [c, d]]
+    def definePath(path)
+      puts "path defined #{path}"
+      @path = path
+      @path_step = 0
+      @pathing = true
+      moveTowards(@path[@path_step][0], @path[@path_step][1])
     end
     
     # tile_x, tile_y - global position of tile in question
@@ -81,7 +117,7 @@ class Entity
       entity_top = @y
       entity_bottom = @y + @height
     
-      puts "checking collision"
+      #puts "checking collision"
 
       # Check for intersection
       if entity_right > tile_x && entity_left < tile_right &&
@@ -92,19 +128,8 @@ class Entity
       end
     end
 
-    def moveTowards(dest_x, dest_y) 
-      @movingTowards = true
-      @dest_x = dest_x
-      @dest_y = dest_y
-
-      delta_x = dest_x - @x
-      delta_y = dest_y - @y
-
-      @move_towards_angle = Math.atan2(delta_y, delta_x)
-    end
-
     def adjust_entity_position(tile_x, tile_y, tile_width, tile_height)
-      puts "ADJUSTING"
+      #puts "ADJUSTING"
       
       # Determine the direction of the collision (left, right, top, or bottom)
       x_collision = @x + @width / 2 < tile_x + tile_width / 2
@@ -146,7 +171,7 @@ class Entity
       oldY = @y
       @y -= @speed #if @x > 32
       if !@canMoveUp
-        @y = oldX
+        @y = oldY
       end
     end
   
@@ -154,7 +179,7 @@ class Entity
       oldY = @y
       @y += @speed #if @x > 32
       if !@canMoveDown
-        @y = oldX
+        @y = oldY
       end
     end
   
