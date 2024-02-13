@@ -49,26 +49,20 @@ class Entity
         #puts "#{distance}"
         # Check if arrived
         if distance <= 3
-          puts "\t\tArrived at destination!"
           if @pathing
-            puts "\t\t\there #{@path_step}, #{@path.length}"
             if @path_step >= @path.length - 1
               @path_step = 0
             else 
-              puts "setting path_step from #{@path_step} => #{@path_step+1}"
               @path_step += 1 
-              puts "\t\t\t\tthere"
             end
-            puts "#{@path}, [#{@path_step}]"
-            puts "#{@path[@path_step][0]}, #{@path[@path_step][1]}"
             moveTowards(@path[@path_step][0], @path[@path_step][1])
           else
             @movingTowards = false
           end
         end
 
-        @x += Math.cos(@move_towards_angle) * @speed;
-		    @y += Math.sin(@move_towards_angle) * @speed;
+        @x += Math.cos(@move_towards_angle) * @speed if ((@dest_x < @x && @canMoveLeft) || (@dest_x > @x && @canMoveRight))
+		    @y += Math.sin(@move_towards_angle) * @speed if ((@dest_y < @y && @canMoveUp) || (@dest_y > @y && @canMoveDown))
       end
       @canMoveLeft = @canMoveRight = @canMoveUp = @canMoveDown = true
     end
@@ -146,6 +140,26 @@ class Entity
         @canMoveDown = false
       else
         @canMoveUp = false
+      end
+
+      if @pathing || @movingTowards
+        if (!(@canMoveRight && @canMoveLeft && @canMoveDown && @canMoveUp))
+          puts "FINDING A NEW WAY"
+
+          # if the entity becomes blocked while pathing, try to find a way around the obstacle
+          #@path[@path_step] = [, ] if @pathing
+
+          # fetch the current goal
+          goal_x = @path[@path_step][0]
+          goal_y = @path[@path_step][1]
+
+          goal_x = goal_x + 64 if !@canMoveLeft
+          goal_x = goal_x - 64 if !@canMoveRight
+          goal_y = goal_y + 64 if !@canMoveUp
+          goal_y = goal_y - 64 if !@canMoveDown
+
+          moveTowards(@x + rand(-64..64),  @y + rand(-64..64))
+        end
       end
     end
 
