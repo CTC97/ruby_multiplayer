@@ -20,6 +20,8 @@ Similar to the spritesheet class, but takes tilemap in. 2d array is used to draw
 Small camera class built on top of Gosu.translate that focuses on the passed object (in this case, the player/entity).
 ### chunkManager.rb
 Randomly generates chunks (fully random right now, will change to simplex noise) and stores chunks. Only the 9 relevant chunks are loaded on each update. Chunks are called back as they become relevant.
+### pathManager.rb
+Currently only generates a circular path, but will generate a variety of paths that can be passed to entities' "definePath" method.
 
 ----
 
